@@ -1,0 +1,12 @@
+{
+  "name": "K-GaRaSaDae · K-가라사대",
+  "short_name": "K-GaRaSaDae",
+  "description": "Korean for travelers, all in one place.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FBF9FA",
+  "theme_color": "#4C1D95",
+  "icons": [
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

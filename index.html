@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBF9FA">
+<title>K-가라사대</title>
+<!-- PWA: 사파리 「홈 화면에 추가」로 앱처럼 설치된다 -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-512.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="K-GaRaSaDae">
+<style>
+/* K-가라사대 — 배움 콘텐츠의 현관. 여행한국어 밖의 콘텐츠가 들어와도
+   CONTENTS 목록에 한 줄 더하면 카드가 늘어나는 확장 구조다.
+   맨 위에는 자음 커튼 인트로가 선다 — 라이트는 한지·남색, 다크는 남색 밤·금빛. */
+
+/* 타이틀 폰트: 앱 안(assets)의 파일을 먼저 찾고, 없으면 CDN, 그것도 없으면 시스템 고딕.
+   물리 엔진 출처: marinabudarina/chimes의 cloth/string physics (MIT, (c) Liam Egan).
+   MIT 고지 전문은 4차시도/_preview_kgara/cloth-physics.js 상단에 보관돼 있다. */
+@font-face {
+  font-family: 'S-CoreDream-9Black';
+  src: url('S-CoreDream-9Black.woff') format('woff'),
+       url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-9Black.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+:root{
+  --paper:#FBF9FA; --card:#FFFFFF; --ink:#16131A; --ink2:#4A4350;
+  --rule:#E7E0E6; --pink:#FF10D2; --pink-soft:#FFEAFB;
+  --shadow:0 1px 2px rgba(22,19,26,.05),0 10px 32px rgba(22,19,26,.07);
+  --purple:#4C1D95; --purple-soft:#EFE8FB;
+  /* 인트로(한지·남색) */
+  --intro-bg0:#f7f0de; --intro-bg1:#ece1c8;
+  --intro-title:#45568a; --intro-title-op:.62;
+  --intro-glow:rgba(36,52,94,.12);
+}
+@media (prefers-color-scheme:dark){
+  :root{--paper:#131017;--card:#1B171F;--ink:#F0EBF0;--ink2:#A79FAB;
+        --rule:#2E2833;--pink:#FF5BE0;--pink-soft:#3A1636;
+        --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 32px rgba(0,0,0,.35);
+        --purple:#A583F5; --purple-soft:#2B2144;
+        /* 인트로(남색 밤·금빛) */
+        --intro-bg0:#17203c; --intro-bg1:#090d1c;
+        --intro-title:#c9b596; --intro-title-op:.8;
+        --intro-glow:rgba(232,200,160,.15);}
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Noto Sans KR",system-ui,sans-serif;line-height:1.6}
+
+/* ── 인트로: 자음 커튼 + 아련한 타이틀 ───────────────────────── */
+.intro{
+  position:relative;
+  width:100%;
+  height:100vh;   /* dvh 미지원 구형 iOS 폴백 */
+  height:100dvh;
+  overflow:hidden;
+  background:radial-gradient(ellipse at 50% 0%, var(--intro-bg0) 0%, var(--intro-bg1) 70%);
+}
+/* 한지 결 — 라이트 모드에서만 옅게 얹는다 */
+.intro::before{
+  content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='linear' slope='0.055'/></feComponentTransfer></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+@media (prefers-color-scheme:dark){ .intro::before{display:none} }
+/* 3등분 중 가운데 토막: 타이틀. 커튼(canvas) 뒤에서 살짝 블러 — 원근감. */
+.intro .title-band{
+  position:absolute;top:33.333%;left:0;width:100%;height:33.333%;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;z-index:1;
+}
+.intro .title-band .big{
+  margin:0;
+  font-family:"S-CoreDream-9Black","Black Han Sans","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  font-weight:400; /* S-Core Dream 9 Black은 단일 굵기 폰트 */
+  font-size:clamp(53px,13.2vw,154px);
+  letter-spacing:-.01em;
+  color:var(--intro-title);
+  filter:blur(1.6px);
+  opacity:var(--intro-title-op);
+  text-shadow:0 0 10px var(--intro-glow);
+  user-select:none;-webkit-user-select:none;
+  white-space:nowrap;
+}
+.intro canvas{
+  position:relative;z-index:2;display:block;width:100%;height:100%;
+  touch-action:pan-y; /* 세로 스와이프는 페이지 스크롤, 가로 드래그는 커튼 놀이 */
+}
+/* 인트로 바닥을 현관 종이색으로 자연스럽게 녹인다 */
+.intro .fade{
+  position:absolute;left:0;right:0;bottom:0;height:96px;z-index:3;pointer-events:none;
+  background:linear-gradient(to bottom, rgba(0,0,0,0), var(--paper));
+}
+/* 스크롤 유도 — 글 없이 화살표만, 은은하게 */
+.intro .cue{
+  position:absolute;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));
+  width:14px;height:14px;z-index:4;pointer-events:none;
+  border-right:2px solid var(--intro-title);border-bottom:2px solid var(--intro-title);
+  transform:translateX(-50%) rotate(45deg);opacity:.55;
+  animation:cue 2.2s ease-in-out infinite;
+}
+@keyframes cue{
+  0%,100%{transform:translateX(-50%) translateY(0) rotate(45deg)}
+  50%{transform:translateX(-50%) translateY(7px) rotate(45deg)}
+}
+
+/* ── 현관 ───────────────────────────────────────────────────── */
+.wrap{max-width:880px;margin:0 auto;padding:48px 22px 80px}
+header h1{
+  /* S-Core Dream의 K 글리프 좌측 여백만큼 당겨 본문과 좌측 정렬을 맞춘다 */
+  margin:0 0 0 -.04em;font-size:clamp(34px,7vw,54px);letter-spacing:-.02em;
+  font-family:"S-CoreDream-9Black","Black Han Sans","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  font-weight:400; /* S-Core Dream 9 Black은 단일 굵기 폰트 */
+  color:var(--purple);
+}
+header h1 em{font-style:normal;color:var(--purple)}
+header .roman{
+  /* 소문자 높이(x-height 0.57em)의 절반만큼 한국어 로고 쪽으로 붙인다 */
+  display:block;margin-top:-.22em;color:var(--purple);opacity:.75;
+  font-family:"S-CoreDream-9Black","Black Han Sans",sans-serif;font-weight:400;
+  font-size:clamp(21px,4.2vw,30px);letter-spacing:-.02em;
+}
+header p{margin:10px 0 0;color:var(--ink2);font-size:clamp(14px,2.4vw,17px);max-width:46ch}
+header p .en{display:block;margin-top:2px;font-size:.88em;opacity:.75}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+  gap:16px;margin-top:36px}
+a.card{
+  display:block;background:var(--card);border:1px solid var(--rule);border-radius:10px;
+  padding:22px 20px 20px;text-decoration:none;color:var(--ink);box-shadow:var(--shadow);
+  transition:transform .15s ease,border-color .15s ease;
+}
+a.card:active{transform:scale(.98)}
+a.card:hover{border-color:var(--purple)}
+.card .kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink2);font-family:ui-monospace,monospace}
+.card h2{margin:8px 0 6px;font-size:21px;letter-spacing:-.035em}
+.card h2 .ko{display:block;margin-top:1px;font-size:13px;font-weight:500;
+  color:var(--ink2);letter-spacing:.02em}
+.card p{margin:0;font-size:13.5px;color:var(--ink2)}
+.card .go{display:inline-block;margin-top:14px;padding:7px 14px;border-radius:999px;
+  background:var(--purple-soft);color:var(--purple);font-size:13px;font-weight:500}
+.card.soon{opacity:.55;pointer-events:none}
+.card.soon .go{background:var(--rule);color:var(--ink2)}
+footer{margin-top:52px;border-top:1px solid var(--rule);padding-top:16px;
+  font-size:12px;color:var(--ink2);font-family:ui-monospace,monospace;letter-spacing:.04em}
+</style>
+</head>
+<body>
+
+<section class="intro" id="intro" aria-hidden="true">
+  <div class="title-band"><div class="big">K-가라사대</div></div>
+  <canvas id="introCv"></canvas>
+  <div class="fade"></div>
+  <div class="cue"></div>
+</section>
+
+<div class="wrap">
+  <header>
+    <h1>K-GaRaSaDae<span class="roman">K-<em>가라사대</em></span></h1>
+    <p>Korean for travelers, all in one place. Tap to start.
+      <span class="en">여행에 필요한 한국어를 한 자리에 모았습니다. 누르면 시작됩니다.</span></p>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>K-GARASADAE · TAP TO LEARN</footer>
+</div>
+
+<script>
+/* 확장 목록 — 새 콘텐츠는 여기 한 줄이면 현관에 선다.
+   href가 없는 것은 「곧 만나요」 카드로 선다. */
+const CONTENTS = [
+  { title: "Arrival & Departure", ko: "입국하기 · 출국하기",
+    desc: "Immigration, customs, and airport check-in — your first and last words in Korea.",
+    href: "travel_korean.html#ch=1" },
+  { title: "Transportation", ko: "교통",
+    desc: "Taxis, subways, buses, and trains.",
+    href: "travel_korean.html#ch=3" },
+  { title: "Accommodations", ko: "숙소",
+    desc: "Hotel check-in, room needs, and asking for help.",
+    href: "travel_korean.html#ch=4" },
+  { title: "Meals", ko: "식사",
+    desc: "Ordering, asking, and paying at restaurants.",
+    href: "travel_korean.html#ch=5" },
+  { title: "Shopping", ko: "쇼핑",
+    desc: "Prices, sizes, tax refunds, and a little bargaining.",
+    href: "travel_korean.html#ch=6" },
+  { title: "Pop Culture", ko: "대중문화",
+    desc: "K-pop, concerts, and fandom life." },
+  { title: "Experience", ko: "체험",
+    desc: "Hands-on culture — hanbok, temples, classes." },
+  { title: "Sightseeing", ko: "관광",
+    desc: "Getting around Korea's sights." },
+];
+const grid = document.getElementById('grid');
+for (const c of CONTENTS) {
+  const a = document.createElement('a');
+  a.className = 'card' + (c.href ? '' : ' soon');
+  if (c.href) a.href = c.href;
+  a.innerHTML = `<div class="kicker">TRAVEL KOREAN</div>`
+    + `<h2>${c.title}<span class="ko">${c.ko}</span></h2>`
+    + `<p>${c.desc}</p><span class="go">${c.href ? 'Start' : 'Coming soon'}</span>`;
+  grid.appendChild(a);
+}
+
+/* ── 자음 커튼 인트로 ─────────────────────────────────────────────
+   물리: Verlet 적분 + 제약 완화. marinabudarina/chimes의
+   cloth/string physics(MIT, (c) Liam Egan)를 바탕으로 다시 썼다. */
+(function () {
+  const wrap = document.getElementById('intro');
+  const canvas = document.getElementById('introCv');
+  const ctx = canvas.getContext('2d');
+
+  const CONSONANTS = ['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+
+  const CONFIG = {
+    gravity: 0.28,
+    damping: 0.985,
+    iterations: 5,
+    stringCompress: 0.02,
+    stringStretch: 1.08,
+    spacerCompress: 0.6,
+    spacerStretch: 3,
+    mouseRadiusSq: 6000,
+    mouseStrength: 3,
+    grabRadius: 26
+  };
+
+  /* 라이트 = 한지에 남색 글자 · 다크 = 남색 밤에 금빛 글자 */
+  const PALETTES = {
+    light: {
+      string: (c) => `hsla(222, 40%, ${26 + Math.sin(c * 0.5) * 6}%, 0.45)`,
+      glyph:  (c) => `hsla(222, 45%, ${24 + Math.sin(c * 0.5) * 6}%, 0.95)`,
+      glyphShadow: 'rgba(36, 52, 94, 0.25)'
+    },
+    dark: {
+      string: (c) => `hsla(${30 + Math.sin(c * 0.5) * 12}, 45%, 72%, 0.4)`,
+      glyph:  (c) => `hsla(${30 + Math.sin(c * 0.5) * 12}, 70%, 82%, 0.95)`,
+      glyphShadow: 'rgba(0, 0, 0, 0.5)'
+    }
+  };
+  const darkMq = window.matchMedia('(prefers-color-scheme: dark)');
+  let palette = darkMq.matches ? PALETTES.dark : PALETTES.light;
+  const onScheme = () => { palette = darkMq.matches ? PALETTES.dark : PALETTES.light; };
+  if (darkMq.addEventListener) darkMq.addEventListener('change', onScheme);
+  else if (darkMq.addListener) darkMq.addListener(onScheme); /* 구형 iOS */
+
+  let dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let gridW, gridH, cellW, cellH, glyphSize;
+  let particles = [];
+  let vConstraints = [];
+  let hConstraints = [];
+  let beads = []; // { pIndex, char }
+  let consonantCursor = 0;
+  let lastBuildW = 0;
+
+  const idx = (row, col) => row * gridW + col;
+  const nextConsonant = () => {
+    const ch = CONSONANTS[consonantCursor % CONSONANTS.length];
+    consonantCursor++;
+    return ch;
+  };
+
+  function build() {
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    lastBuildW = w;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    gridW = Math.max(12, Math.floor(w / 34));
+    gridH = 20;
+    cellW = w / (gridW - 1);
+
+    // 타이틀의 실제 위치를 재서, 커튼이 "타이틀을 다 덮고 + 타이틀 높이만큼 더" 내려오게 한다.
+    const titleEl = wrap.querySelector('.title-band .big');
+    const wrapRect = wrap.getBoundingClientRect();
+    const titleRect = titleEl.getBoundingClientRect();
+    const dropPx = Math.min(h * 0.95, (titleRect.bottom - wrapRect.top) + titleRect.height);
+    cellH = dropPx / (gridH - 1);
+    glyphSize = Math.max(11, Math.min(20, cellW * 0.6));
+
+    particles = [];
+    for (let r = 0; r < gridH; r++) {
+      for (let c = 0; c < gridW; c++) {
+        particles.push({
+          x: c * cellW, y: r * cellH,
+          ox: c * cellW, oy: r * cellH,
+          pinned: r === 0,
+          downCon: null,
+          upCon: null
+        });
+      }
+    }
+
+    vConstraints = [];
+    hConstraints = [];
+    for (let r = 0; r < gridH; r++) {
+      for (let c = 0; c < gridW; c++) {
+        const p = particles[idx(r, c)];
+        if (r < gridH - 1) {
+          const below = particles[idx(r + 1, c)];
+          const con = { a: p, b: below, len: cellH };
+          vConstraints.push(con);
+          p.downCon = con;
+          below.upCon = con;
+        }
+        if (c < gridW - 1) hConstraints.push({ a: p, b: particles[idx(r, c + 1)], len: cellW });
+      }
+    }
+
+    // 줄마다 몇 개씩, 불규칙한 간격으로 자음을 매단다.
+    beads = [];
+    consonantCursor = 0;
+    for (let c = 0; c < gridW; c++) {
+      let r = 5 + Math.floor(Math.random() * 3);
+      while (r < gridH) {
+        beads.push({ pIndex: idx(r, c), char: nextConsonant() });
+        r += 3 + Math.floor(Math.random() * 3);
+      }
+    }
+  }
+
+  const mouse = { x: -9999, y: -9999, px: -9999, py: -9999, grabbed: null, active: false };
+
+  function localPoint(e) {
+    const rect = wrap.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  wrap.addEventListener('pointerdown', (e) => {
+    const { x, y } = localPoint(e);
+    mouse.px = x; mouse.py = y;
+    mouse.x = x; mouse.y = y;
+    mouse.active = true;
+    let nearest = null, nd = Infinity;
+    particles.forEach((p) => {
+      if (p.pinned) return;
+      const dx = p.x - x, dy = p.y - y, d = dx * dx + dy * dy;
+      if (d < CONFIG.grabRadius * CONFIG.grabRadius && d < nd) { nearest = p; nd = d; }
+    });
+    if (nearest) { mouse.grabbed = nearest; nearest._wasPinned = nearest.pinned; nearest.pinned = true; }
+  });
+  wrap.addEventListener('pointerup', releaseGrab);
+  wrap.addEventListener('pointercancel', releaseGrab);
+  wrap.addEventListener('pointerleave', () => { releaseGrab(); mouse.active = false; });
+  function releaseGrab() {
+    if (mouse.grabbed) { mouse.grabbed.pinned = mouse.grabbed._wasPinned; mouse.grabbed = null; }
+  }
+  wrap.addEventListener('pointermove', (e) => {
+    const { x, y } = localPoint(e);
+    // 화면 밖에 나갔다 들어와도 튀지 않도록, 재진입 첫 프레임은 이전 좌표를 현재로 맞춘다.
+    if (!mouse.active) { mouse.px = x; mouse.py = y; mouse.active = true; }
+    else { mouse.px = mouse.x; mouse.py = mouse.y; }
+    mouse.x = x; mouse.y = y;
+    if (mouse.grabbed) {
+      mouse.grabbed.x = x; mouse.grabbed.y = y;
+      mouse.grabbed.ox = x; mouse.grabbed.oy = y;
+    }
+  });
+
+  function applyMouseField() {
+    if (!mouse.active) return;
+    const mvx = mouse.x - mouse.px, mvy = mouse.y - mouse.py;
+    const speed = Math.min(Math.sqrt(mvx * mvx + mvy * mvy), 40);
+    if (speed < 0.4 && !mouse.grabbed) return;
+    particles.forEach((p) => {
+      if (p.pinned) return;
+      const dx = p.x - mouse.x, dy = p.y - mouse.y, ds = dx * dx + dy * dy;
+      if (ds < CONFIG.mouseRadiusSq) {
+        const t = 1 - ds / CONFIG.mouseRadiusSq;
+        const strength = t * t * CONFIG.mouseStrength * 0.02;
+        p.x += mvx * strength;
+        p.y += mvy * strength;
+      }
+    });
+  }
+
+  function solve(cn, compressF, stretchF) {
+    const dx = cn.b.x - cn.a.x, dy = cn.b.y - cn.a.y;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 0.0001;
+    const minLen = cn.len * compressF, maxLen = cn.len * stretchF;
+    let target = cn.len;
+    if (dist < minLen) target = minLen;
+    else if (dist > maxLen) target = maxLen;
+    else return;
+    const diff = (target - dist) / dist * 0.5;
+    const ox = dx * diff, oy = dy * diff;
+    if (!cn.a.pinned) { cn.a.x -= ox; cn.a.y -= oy; }
+    if (!cn.b.pinned) { cn.b.x += ox; cn.b.y += oy; }
+  }
+
+  let tAcc = 0;
+  function step() {
+    tAcc += 0.016;
+    applyMouseField();
+    particles.forEach((p, i) => {
+      if (p.pinned) return;
+      const vx = (p.x - p.ox) * CONFIG.damping;
+      const vy = (p.y - p.oy) * CONFIG.damping;
+      p.ox = p.x; p.oy = p.y;
+      const col = i % gridW;
+      const wind = Math.sin(tAcc * 0.9 + col * 0.4) * 0.015;
+      p.x += vx + wind;
+      p.y += vy + CONFIG.gravity;
+    });
+    for (let k = 0; k < CONFIG.iterations; k++) {
+      vConstraints.forEach((cn) => solve(cn, CONFIG.stringCompress, CONFIG.stringStretch));
+      hConstraints.forEach((cn) => solve(cn, CONFIG.spacerCompress, CONFIG.spacerStretch));
+    }
+  }
+
+  // 자음이 매달린 지점의 줄 방향을 구해서, 그 방향에 맞춰 글자를 회전시킨다.
+  function angleFor(p) {
+    const con = p.downCon || p.upCon;
+    if (!con) return 0;
+    const dx = con.b.x - con.a.x, dy = con.b.y - con.a.y;
+    return Math.atan2(dy, dx) - Math.PI / 2;
+  }
+
+  function draw() {
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    ctx.clearRect(0, 0, w, h);
+
+    for (let c = 0; c < gridW; c++) {
+      ctx.beginPath();
+      for (let r = 0; r < gridH; r++) {
+        const p = particles[idx(r, c)];
+        if (r === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+      }
+      ctx.strokeStyle = palette.string(c);
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+
+    ctx.font = `600 ${glyphSize}px "Noto Sans KR", "Malgun Gothic", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    beads.forEach(({ pIndex, char }) => {
+      const p = particles[pIndex];
+      const angle = angleFor(p);
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(angle);
+      ctx.shadowColor = palette.glyphShadow;
+      ctx.shadowBlur = 4;
+      ctx.fillStyle = palette.glyph(pIndex % gridW);
+      ctx.fillText(char, 0, 0);
+      ctx.restore();
+    });
+  }
+
+  function loop() {
+    step();
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // 모바일 주소창이 나타났다 사라질 때의 세로 resize로는 커튼을 리셋하지 않는다.
+  window.addEventListener('resize', () => {
+    if (wrap.clientWidth !== lastBuildW) build();
+  });
+  build();
+  // 웹폰트가 뒤늦게 로드되면 타이틀 높이가 바뀌므로 커튼 길이를 다시 잰다.
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(build);
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
