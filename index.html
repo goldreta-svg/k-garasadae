@@ -144,8 +144,41 @@ a.card:hover{border-color:var(--purple)}
 .card p{margin:0;font-size:13.5px;color:var(--ink2)}
 .card .go{display:inline-block;margin-top:14px;padding:7px 14px;border-radius:999px;
   background:var(--purple-soft);color:var(--purple);font-size:13px;font-weight:500}
+.card .n{display:inline-block;margin-left:10px;font-family:ui-monospace,monospace;
+  font-size:11px;color:var(--ink2);letter-spacing:.02em}
 .card.soon{opacity:.55;pointer-events:none}
 .card.soon .go{background:var(--rule);color:var(--ink2)}
+/* ── 설명 영상 — 포스터만 두고, 누르면 그때 불러온다.
+   영상이 7.5MB라 현관에 그대로 심으면 문 여는 데만 한참 걸린다. */
+.film{margin-top:30px;background:var(--card);border:1px solid var(--rule);border-radius:10px;
+  box-shadow:var(--shadow);overflow:hidden}
+.film .poster{position:relative;width:100%;aspect-ratio:16/9;border:0;padding:0;cursor:pointer;
+  background:linear-gradient(150deg,var(--purple-soft) 0%,var(--card) 62%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  font-family:inherit;color:var(--ink);transition:filter .15s ease}
+.film .poster:hover{filter:brightness(.98)}
+.film .poster .mark{font-family:'S-CoreDream-9Black','Black Han Sans',sans-serif;
+  font-size:clamp(30px,6.4vw,52px);color:var(--purple);letter-spacing:-.02em;line-height:1}
+.film .poster .mark i{font-style:normal;color:var(--pink)}
+.film .poster .cap{font-size:clamp(13px,2.2vw,16px);color:var(--ink2);max-width:34ch;text-align:center}
+.film .poster .cap b{display:block;color:var(--ink);font-weight:600;font-size:1.08em;margin-bottom:3px}
+.film .poster .play{display:inline-flex;align-items:center;gap:9px;padding:11px 22px;
+  border-radius:999px;background:var(--purple);color:#fff;font-size:14px;font-weight:600}
+.film .poster .len{font-family:ui-monospace,monospace;font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink2)}
+.film iframe{display:block;width:100%;aspect-ratio:16/9;border:0}
+
+/* ── 코너 → 하위 항목, 두 단계 ───────────────────────────────── */
+.secthead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:38px}
+.secthead h2{margin:0;font-size:clamp(19px,3.4vw,25px);letter-spacing:-.02em}
+.secthead h2 .ko{font-size:.62em;font-weight:500;color:var(--ink2);margin-left:9px}
+.secthead p{margin:0;flex:1 1 100%;color:var(--ink2);font-size:13.5px}
+.secthead p .en{display:block;margin-top:2px;opacity:.8}
+button.back{align-self:flex-start;margin-top:30px;padding:9px 18px;border-radius:999px;
+  border:1px solid var(--rule);background:var(--card);color:var(--purple);font-family:inherit;
+  font-size:13px;font-weight:500;cursor:pointer;box-shadow:var(--shadow)}
+button.back:hover{border-color:var(--purple)}
+button.back:active{transform:scale(.97)}
 footer{margin-top:52px;border-top:1px solid var(--rule);padding-top:16px;
   font-size:12px;color:var(--ink2);font-family:ui-monospace,monospace;letter-spacing:.04em}
 </style>
@@ -166,50 +199,137 @@ footer{margin-top:52px;border-top:1px solid var(--rule);padding-top:16px;
       <span class="en">여행에 필요한 한국어를 한 자리에 모았습니다. 누르면 시작됩니다.</span></p>
   </header>
 
-  <div class="grid" id="grid"></div>
+  <div class="film">
+    <button class="poster" id="poster" aria-label="K-가라사대 설명 영상 재생">
+      <div class="mark">K-<i>가라사대</i></div>
+      <div class="cap"><b>How Korean Works</b>
+        Why Korean word order moves and English cannot.<br>한국어는 왜 자리가 흔들려도 되는가.</div>
+      <span class="play">&#9654;&nbsp; Watch first</span>
+      <span class="len">5 min &middot; English</span>
+    </button>
+  </div>
+
+  <div id="screen"></div>
 
   <footer>K-GARASADAE · TAP TO LEARN</footer>
 </div>
 
 <script>
-/* 확장 목록 — 새 콘텐츠는 여기 한 줄이면 현관에 선다.
-   href가 없는 것은 「곧 만나요」 카드로 선다. */
-const CONTENTS = [
-  { title: "Arrival & Departure", ko: "입국하기 · 출국하기",
-    desc: "Immigration, customs, and airport check-in — your first and last words in Korea.",
-    href: "travel_korean.html#ch=1" },
-  { title: "Transportation", ko: "교통",
-    desc: "Taxis, subways, buses, and trains.",
-    href: "travel_korean.html#ch=3" },
-  { title: "Accommodations", ko: "숙소",
-    desc: "Hotel check-in, room needs, and asking for help.",
-    href: "travel_korean.html#ch=4" },
-  { title: "Meals", ko: "식사",
-    desc: "Ordering, asking, and paying at restaurants.",
-    href: "travel_korean.html#ch=5" },
-  { title: "Shopping", ko: "쇼핑",
-    desc: "Prices, sizes, tax refunds, and a little bargaining.",
-    href: "travel_korean.html#ch=6" },
-  { title: "Pop Culture", ko: "대중문화",
-    desc: "K-pop, concerts, and fandom life.",
-    href: "travel_korean.html#ch=7" },
-  { title: "Experience", ko: "체험",
-    desc: "Hands-on culture — hanbok, temples, classes.",
-    href: "travel_korean.html#ch=9" },
-  { title: "Sightseeing", ko: "관광",
-    desc: "Getting around Korea's sights.",
-    href: "travel_korean.html#ch=11" },
+/* ── 콘텐츠는 두 층이다 — 코너를 고르고, 그 안에서 항목을 고른다.
+   새 코너는 여기 한 덩어리, 새 항목은 items 에 한 줄이면 선다.
+   items 가 비었거나 href 가 없으면 「곧 만나요」로 선다. */
+const CORNERS = [
+  { id:"travel", title:"Travel Korean", ko:"여행한국어", kicker:"TRAVEL KOREAN",
+    desc:"The words you need at the airport, on the subway, at the table.",
+    descKo:"공항에서, 지하철에서, 식탁에서 필요한 말.",
+    items:[
+      { title:"Arrival", ko:"입국하기", n:10,
+        desc:"Immigration, customs, and your first words in Korea.",
+        href:"travel_korean.html#ch=1" },
+      { title:"Departure", ko:"출국하기", n:8,
+        desc:"Check-in, baggage, and boarding on the way home.",
+        href:"travel_korean.html#ch=2" },
+      { title:"Transportation", ko:"교통", n:20,
+        desc:"Taxis, subways, buses, and trains.",
+        href:"travel_korean.html#ch=3" },
+      { title:"Accommodations", ko:"숙소", n:35,
+        desc:"Hotel check-in, room needs, and asking for help.",
+        href:"travel_korean.html#ch=4" },
+      { title:"Meals", ko:"식사", n:20,
+        desc:"Ordering, asking, and paying at restaurants.",
+        href:"travel_korean.html#ch=5" },
+      { title:"Shopping", ko:"쇼핑", n:40,
+        desc:"Prices, sizes, tax refunds, and a little bargaining.",
+        href:"travel_korean.html#ch=6" },
+      { title:"Pop Culture 1", ko:"대중문화 1", n:9,
+        desc:"K-pop, concerts, and fandom life.",
+        href:"travel_korean.html#ch=7" },
+      { title:"Pop Culture 2", ko:"대중문화 2", n:13,
+        desc:"Deeper into the fandom world — merch, venues, meeting people.",
+        href:"travel_korean.html#ch=8" },
+      { title:"Experience 1", ko:"체험 1", n:10,
+        desc:"Hands-on culture — hanbok, temples, classes.",
+        href:"travel_korean.html#ch=9" },
+      { title:"Experience 2", ko:"체험 2", n:11,
+        desc:"More to try with your own hands.",
+        href:"travel_korean.html#ch=10" },
+      { title:"Sightseeing 1", ko:"관광 1", n:7,
+        desc:"Getting around Korea's sights.",
+        href:"travel_korean.html#ch=11" },
+      { title:"Sightseeing 2", ko:"관광 2", n:12,
+        desc:"Palaces, viewpoints, and the road between them.",
+        href:"travel_korean.html#ch=12" }
+    ] },
+  { id:"culture", title:"Korean Culture", ko:"한국 문화", kicker:"KOREAN CULTURE",
+    desc:"Holidays, manners, and the why behind them.",
+    descKo:"명절과 예절, 그리고 그 까닭.", items:[] },
+  { id:"food", title:"Korean Food", ko:"한국 음식", kicker:"KOREAN FOOD",
+    desc:"Recipes, and how to order them by name.",
+    descKo:"레시피, 그리고 이름으로 주문하는 법.", items:[] }
 ];
-const grid = document.getElementById('grid');
-for (const c of CONTENTS) {
-  const a = document.createElement('a');
-  a.className = 'card' + (c.href ? '' : ' soon');
-  if (c.href) a.href = c.href;
-  a.innerHTML = `<div class="kicker">TRAVEL KOREAN</div>`
-    + `<h2>${c.title}<span class="ko">${c.ko}</span></h2>`
-    + `<p>${c.desc}</p><span class="go">${c.href ? 'Start' : 'Coming soon'}</span>`;
-  grid.appendChild(a);
+
+const screen = document.getElementById('screen');
+const esc = (x) => String(x).replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+function cardHTML(kicker, title, ko, desc, ready, label, n){
+  return '<div class="kicker">' + esc(kicker) + '</div>'
+    + '<h2>' + esc(title) + '<span class="ko">' + esc(ko) + '</span></h2>'
+    + '<p>' + esc(desc) + '</p>'
+    + '<span class="go">' + (ready ? label : 'Coming soon') + '</span>'
+    + (n ? '<span class="n">' + n + ' sentences</span>' : '');
 }
+
+function drawCorners(){
+  screen.innerHTML = '<div class="grid"></div>';
+  const g = screen.querySelector('.grid');
+  for (const c of CORNERS){
+    const ready = c.items.length > 0;
+    const a = document.createElement('a');
+    a.className = 'card' + (ready ? '' : ' soon');
+    if (ready) a.href = '#/' + c.id;
+    const tot = c.items.reduce((x, it) => x + (it.n || 0), 0);
+    a.innerHTML = cardHTML(c.kicker, c.title, c.ko, c.desc, ready, 'Open', tot);
+    g.appendChild(a);
+  }
+}
+
+function drawItems(c){
+  screen.innerHTML =
+      '<div class="secthead"><h2>' + esc(c.title)
+    + '<span class="ko">' + esc(c.ko) + '</span></h2>'
+    + '<p>' + esc(c.desc) + '<span class="en">' + esc(c.descKo) + '</span></p></div>'
+    + '<div class="grid"></div>'
+    + '<button class="back" type="button">&larr;&nbsp; All corners · 코너 전체</button>';
+  const g = screen.querySelector('.grid');
+  for (const it of c.items){
+    const a = document.createElement('a');
+    a.className = 'card' + (it.href ? '' : ' soon');
+    if (it.href) a.href = it.href;
+    a.innerHTML = cardHTML(c.kicker, it.title, it.ko, it.desc, !!it.href, 'Start', it.n);
+    g.appendChild(a);
+  }
+  screen.querySelector('.back').onclick = function(){ location.hash = ''; };
+}
+
+function route(){
+  const m = location.hash.match(/^#\/(\w+)/);
+  const id = m ? m[1] : '';
+  const c = CORNERS.find((x) => x.id === id && x.items.length);
+  if (c) drawItems(c); else drawCorners();
+  /* 코너를 열 때만 목록 머리로 눈을 옮긴다 — 대문 꼭대기로 되돌리지 않는다 */
+  if (c) screen.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+addEventListener('hashchange', route);
+route();
+
+/* ── 설명 영상 — 누를 때 비로소 불러온다 ───────────────────────── */
+document.getElementById('poster').addEventListener('click', function(){
+  const f = document.createElement('iframe');
+  f.src = 'how_it_works.html';
+  f.title = 'K-가라사대 — How Korean Works';
+  f.allow = 'autoplay; fullscreen';
+  this.replaceWith(f);
+});
 
 /* ── 자음 커튼 인트로 ─────────────────────────────────────────────
    물리: Verlet 적분 + 제약 완화. marinabudarina/chimes의
