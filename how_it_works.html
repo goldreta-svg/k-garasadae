@@ -67,17 +67,9 @@ body{margin:0;background:var(--paper);color:var(--ink);
 :focus-visible{outline:2px solid var(--purple);outline-offset:2px}
 .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 72px;display:flex;flex-direction:column;gap:18px}
 
-/* 홈버튼 — 어디서든 현관으로. 아티팩트에서는 스스로 사라진다. */
-a.home{position:fixed;left:16px;top:calc(16px + env(safe-area-inset-top));z-index:99;
-  width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-size:22px;text-decoration:none;background:var(--board);border:1px solid var(--rule);
-  box-shadow:0 2px 10px rgba(0,0,0,.18);color:var(--ink);transition:border-color .15s}
-a.home:hover{border-color:var(--purple)}
-
 /* ── 머리 ─────────────────────────────────────────────────── */
 header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
-  padding-bottom:16px;padding-left:50px;border-bottom:1px solid var(--rule)}
-body.nohome header{padding-left:0}
+  padding-bottom:16px;border-bottom:1px solid var(--rule)}
 .brand h1{margin:0;font-family:var(--display);font-weight:400;
   font-size:clamp(26px,4.2vw,38px);letter-spacing:-.02em;text-wrap:balance}
 .brand h1{color:var(--purple)}
@@ -289,15 +281,6 @@ nav.chs button[aria-current="true"]{border-color:var(--purple);background:var(--
 nav.chs button[aria-current="true"] .who,
 nav.chs button[aria-current="true"] .en{color:var(--purple)}
 
-/* ── 해설 ─────────────────────────────────────────────────── */
-.note{padding:16px 20px;background:var(--stage);border:1px solid var(--rule);
-  border-radius:var(--r-card);box-shadow:var(--shadow);
-  font-size:13.5px;color:var(--ink-2)}
-.note b{color:var(--ink);font-weight:600}
-.note code{font-family:var(--mono);font-size:12px;background:var(--board);
-  padding:1px 6px;border-radius:4px}
-footer{padding-top:14px;border-top:1px solid var(--rule);font-family:var(--mono);font-size:11px;
-  color:var(--ink-2);line-height:1.9;letter-spacing:.03em}
 
 @media (max-width:640px){
   header{padding-left:0}
@@ -311,8 +294,6 @@ footer{padding-top:14px;border-top:1px solid var(--rule);font-family:var(--mono)
 </head>
 <body>
 
-
-<a class="home" href="index.html" title="Home · 현관으로 돌아가기">⌂</a>
 
 <div class="wrap">
 
@@ -591,27 +572,10 @@ footer{padding-top:14px;border-top:1px solid var(--rule);font-family:var(--mono)
       <option value="1.15">빠르게</option>
     </select>
     <span id="holdNote" class="hold"></span>
-    <span id="voiceNote"></span>
   </div>
 
   <nav class="chs" id="chapters" aria-label="장 이동"></nav>
 
-  <div class="note">
-    <b>도해</b> — 조문 §3·§5·§8 대로 그렸습니다. 골격단위 <code>U=110</code>, 스스로점 <code>(480,165)</code>, 모든 좌표는 U 배수입니다.
-    사선 45°·이동량 U(§8-3) / 선반 세로 1.5U·가로 3.0U(§8-4) / 주어 토씨 끝은 세로선 왼쪽 0.5U, 동사 첫 글자는 오른쪽 0.5U(§8-6) /
-    뼈·크로스는 검정 굵게, 살은 회색 절반 두께(§5). 토씨 <code>#FF10D2</code> 도 조문 §5의 값입니다.
-  </div>
-  <div class="note">
-    <b>도해에 들어가는 자는 하나</b> — 한국어로 적을 말이 있는가. <code>A</code> = 「어떤」 → 그린다. <code>the</code> → 없음 → 안 그린다.
-    <b>이 영상이 다루지 않는 것</b> — 영작(한국어 → 영어) 방향과 어미(자음끝·모음끝) 규칙. 독해에서 종요소의 소속을 가르는 것은 영어의 위치입니다.
-  </div>
-  <div class="note">
-    <b>음성</b> — 나레이션을 다 읽기 전에는 시계가 다음 장면으로 넘어가지 않습니다(<b>음성 대기</b> 표시). 그래서 음성을 켜면 총 길이가 5:00보다 길어집니다.
-    자막만 볼 때는 정확히 5:00입니다. 음성 목록의 <b>★</b>는 억양이 살아 있는 음성입니다 — 없으면 브라우저 기본 음성이라 밋밋합니다.
-    <b>최종 영상에는 사람 목소리나 뉴럴 TTS로 녹음하시길 권합니다</b>; 이 페이지는 타이밍 기준본입니다.
-  </div>
-
-  <footer>K-GARASADAE · HOW KOREAN WORKS · 언어환율표</footer>
 </div>
 
 <script>
@@ -700,12 +664,6 @@ footer{padding-top:14px;border-top:1px solid var(--rule);font-family:var(--mono)
 
   var $ = function(s){ return document.querySelector(s); };
 
-  /* 아티팩트에서는 현관이 없으므로 홈버튼이 스스로 사라진다 */
-  if(/(^|\.)claude\.ai$/.test(location.hostname)){
-    var hb=$("a.home"); if(hb) hb.remove();
-    document.body.classList.add("nohome");
-  }
-
   var screen=$("#screen"), subEn=$("#subEn"), subKr=$("#subKr"), subs=$("#subs");
   var seek=$("#seek"), fill=$("#fill"), now=$("#now"), pp=$("#pp");
   var scan=$("#scan"), dsent=$("#dsent"), dnote=$("#dnote");
@@ -739,7 +697,7 @@ footer{padding-top:14px;border-top:1px solid var(--rule);font-family:var(--mono)
 
   /* ── 나레이션 ─────────────────────────────────────────────────────
      ElevenLabs 로 미리 구운 조각을 순서대로 잇대어 재생한다.
-       영어 Daniel (speed 0.8) · 한국어 Soo hyun (speed 1.0) · 73조각
+       Daniel 한 목소리 (speed 0.8, 한국어는 영어 소리 표기로) · 58조각
      큐 하나가 조각 여럿일 수 있다 — 「lived」[영] 뒤에 「했다」[한] 처럼 갈리기 때문이다.
      브라우저 음성(speechSynthesis)은 쓰지 않는다 — 기기마다 목소리가 달라져서다.
      보통/빠르게는 다시 굽지 않고 playbackRate 로 바꾼다. 브라우저가 음높이를 지킨다. */
@@ -751,8 +709,7 @@ footer{padding-top:14px;border-top:1px solid var(--rule);font-family:var(--mono)
   });
 
   var voiceOn = true, rate = 1, speaking = false, token = 0, curSegs = [], segIdx = 0;
-  var vbtn = $("#vbtn"), holdNote = $("#holdNote"), voiceNote = $("#voiceNote");
-  voiceNote.textContent = "Daniel · Soo hyun — ElevenLabs";
+  var vbtn = $("#vbtn"), holdNote = $("#holdNote");
 
   function playSeg(my){
     if(my !== token) return;
@@ -898,6 +855,15 @@ footer{padding-top:14px;border-top:1px solid var(--rule);font-family:var(--mono)
     if(e.code==="ArrowLeft"){ e.preventDefault(); setTime(t-5); }
   });
   window.addEventListener("pagehide",hush);
+
+  /* 현관 창 안에 들어 있으면 내 키를 알려 준다 — 현관이 창을 그만큼 늘려, 창 안 스크롤 없이 조작부까지 다 보이게 */
+  if(window.parent!==window){
+    /* 문서 전체 높이(scrollHeight)는 창보다 작아지지 않아 줄어들 줄 모르므로, 내용(.wrap)의 바닥을 잰다 */
+    var wrapEl=$(".wrap");
+    var tellH=function(){ parent.postMessage({kgHeight:Math.ceil(wrapEl.getBoundingClientRect().bottom+window.scrollY)},"*"); };
+    if(window.ResizeObserver) new ResizeObserver(tellH).observe(wrapEl);
+    window.addEventListener("load",tellH); tellH();
+  }
 
   pause();
   render();

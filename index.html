@@ -166,7 +166,9 @@ a.card:hover{border-color:var(--purple)}
   border-radius:999px;background:var(--purple);color:#fff;font-size:14px;font-weight:600}
 .film .poster .len{font-family:ui-monospace,monospace;font-size:11px;letter-spacing:.12em;
   text-transform:uppercase;color:var(--ink2)}
+/* 처음엔 16:9 로 열고, 영상이 제 키를 알려 오면 그 높이로 늘린다 — 창 안 스크롤 없이 조작부까지 다 보이게 */
 .film iframe{display:block;width:100%;aspect-ratio:16/9;border:0}
+.film iframe.fit{aspect-ratio:auto}
 
 /* ── 코너 → 하위 항목, 두 단계 ───────────────────────────────── */
 .secthead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:38px}
@@ -328,7 +330,16 @@ document.getElementById('poster').addEventListener('click', function(){
   f.src = 'how_it_works.html';
   f.title = 'K-가라사대 — How Korean Works';
   f.allow = 'autoplay; fullscreen';
+  f.scrolling = 'no';
   this.replaceWith(f);
+  f.scrollIntoView({ behavior:'smooth', block:'start' });
+});
+addEventListener('message', function(e){
+  const f = document.querySelector('.film iframe');
+  const h = e.data && e.data.kgHeight;
+  if (!f || e.source !== f.contentWindow || !(h > 0)) return;
+  f.classList.add('fit');
+  f.style.height = h + 'px';
 });
 
 /* ── 자음 커튼 인트로 ─────────────────────────────────────────────
